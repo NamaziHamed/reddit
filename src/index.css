@@ -1,0 +1,24 @@
+*{
+  box-sizing: border-box !important;
+}
+.container-fluid {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.header i{
+  font-size: calc(1rem + 1vw);
+  color: tomato;
+  border: 1px solid tomato;
+  border-radius: 50%;
+  padding: 2% 3%;
+}
+
+dialog{
+  width: 70vw;
+  padding: 5%;
+  max-width: 800px;
+}
+.reddit-card{
+  height: 100vh;
+}
