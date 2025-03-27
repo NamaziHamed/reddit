@@ -1,24 +1,53 @@
-*{
+* {
   box-sizing: border-box !important;
 }
 .container-fluid {
   height: 100vh;
   overflow: hidden;
 }
-
-.header i{
-  font-size: calc(1rem + 1vw);
+.header, .header i{
   color: tomato;
+}
+.tomato-rounded {
+  font-size: calc(1rem + 1vw);
   border: 1px solid tomato;
   border-radius: 50%;
   padding: 2% 3%;
 }
 
-dialog{
+dialog {
   width: 70vw;
   padding: 5%;
   max-width: 800px;
 }
-.reddit-card{
+.reddit-card {
   height: 100vh;
+}
+
+.subreddit-item {
+  text-decoration: none !important;
+  color: black !important;
+  display: block;
+  border-bottom: 1px solid tomato;
+  padding: 1% 0;
+}
+
+a:hover {
+  color: tomato !important;
+  font-size: 1.1rem;
+}
+
+.dropdown{
+  position: relative !important;
+}
+#dropdown-menu {
+  position: absolute; 
+  background: #f8f9fa;
+  padding: 10px;
+  z-index: 1000;
+  right: 0;
+  border-radius: 10px;
+}
+.dropdown-item:hover{
+  color: black !important;
 }
