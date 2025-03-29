@@ -4,9 +4,10 @@ const Subreddit = () => {
   const [inputValue, setInputValue] = useState("");
   const [redditData, setRedditData] = useState("");
   const [isData, setIsData] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState({ display: "none" });
   const dialogRef = useRef(null);
-  const dropdownRef = useRef(null)
+  const dropdownRef = useRef(null);
 
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
@@ -17,7 +18,7 @@ const Subreddit = () => {
 
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      setDropdownStyle({ display: "none" })
+      setDropdownStyle({ display: "none" });
     }
   };
 
@@ -41,13 +42,13 @@ const Subreddit = () => {
 
   const fetchReddit = async (e) => {
     e.preventDefault();
-
+    setIsLoading(true)
     const saveData = (data) => {
       setRedditData(data.data.children);
     };
 
     const authCode =
-      "eyJhbGciOiJSUzI1NiIsImtpZCI6IlNIQTI1NjpzS3dsMnlsV0VtMjVmcXhwTU40cWY4MXE2OWFFdWFyMnpLMUdhVGxjdWNZIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyIiwiZXhwIjoxNzQzMTUxNzYxLjUxNjM2MiwiaWF0IjoxNzQzMDY1MzYxLjUxNjM2MSwianRpIjoiZExBMUtfNkN2TFRUeW4zWnUtcjFWZmxnQVg1ZFVBIiwiY2lkIjoiam5BZ0NuU0JKazhxdzROWEUxZXRaZyIsImxpZCI6InQyXzFtMXc1dWVmNmUiLCJhaWQiOiJ0Ml8xbTF3NXVlZjZlIiwibGNhIjoxNzQzMDY0OTUwNjA1LCJzY3AiOiJlSnlLVnRKU2lnVUVBQURfX3dOekFTYyIsImZsbyI6OX0.lCRUC7wBJ3yYjV403mo5o4st2IBe5RQQAGOYJwJY6irtttG8hdnpfwOHj1TOhX88djsoCRkZjhTZF_zj_3EJ7kVLEe9848mpbxlRQ0h-8ackj3C_kh0mbpGMjoy9HIJ_HoG8nQYMypz9Y2ftSgKlVCq4a-roBmo8VI2c7pRDlLqt96Inl3yvb_PQGeLTg0e5ft_f1rIeXVcvqpL3Ur0c6-m8X_k1X6D7DUpvNatB8bvdnODY3o3ftem6RoD4GvHNlyMFoF9Br36LStuxmbR_O05FSQv5oN81_7mTVx3qxJVnH1QxuOBrySbvh9pT7repxAoAqd9wsSj0YR3BIK3lyg";
+      "eyJhbGciOiJSUzI1NiIsImtpZCI6IlNIQTI1NjpzS3dsMnlsV0VtMjVmcXhwTU40cWY4MXE2OWFFdWFyMnpLMUdhVGxjdWNZIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyIiwiZXhwIjoxNzQzMzE4NzAyLjM4MjE3OSwiaWF0IjoxNzQzMjMyMzAyLjM4MjE3OSwianRpIjoiVnJOWlNYa3BMdGRlTVZKMkZ6enNhNWd4VkwtZjlnIiwiY2lkIjoiam5BZ0NuU0JKazhxdzROWEUxZXRaZyIsImxpZCI6InQyXzFtMXc1dWVmNmUiLCJhaWQiOiJ0Ml8xbTF3NXVlZjZlIiwibGNhIjoxNzQzMDY0OTUwNjA1LCJzY3AiOiJlSnlLVnRKU2lnVUVBQURfX3dOekFTYyIsImZsbyI6OX0.p3HQMjbvnm0H6jhUptHsn2Tbm9C_RCr8kJ8Gi7p3Af2RxoESsrXPlLy99EkfJwhLHzdpRHGnkfA-4HZdEK4K63vOLHUemXDo-MF-FfaFsaX7icgOCTbDgXFj2ZKrPFzTfsx1f02_76Jt-HeJQKdH2uXQz2UhYK71okg1abi3hART_s1DCd1cHjzdcX-7eD-xpMUpqsponsc0fmHgidi1rD9tW6M-NsA3IiIxNN_y3JAdPIlcfKHQ4wUUh0Er-9vrzNB8BiZPj5qvlyKwamtTRGOnSaWXgBx856Aa0EYaiEg4Rg-chPLdby7GjbeVaGISJlzy3UM2GN5_BQjdsx5WeQ";
 
     try {
       const response = await fetch(
@@ -62,17 +63,33 @@ const Subreddit = () => {
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        if (response.status === 404) {
+          alert(
+            "Subreddit does not exist! Please check the name and try again."
+          );
+        } else if (response.status === 403) {
+          alert("This subreddit is restricted! Access is not allowed.");
+        } else {
+          alert(`An error occurred: HTTP status ${response.status}`);
+        }
+        setIsData(false); 
+        return;
       }
-
       const data = await response.json();
-      data.kind
-        ? saveData(data)
-        : alert("Wrong subreddit name or restricted subreddit!");
+
+      if (data.kind) {
+        saveData(data);
+        setIsData(true);
+      } else {
+        alert("Wrong subreddit name or restricted subreddit!");
+        setIsData(false);
+      }
     } catch (err) {
       console.error("Error fetching subreddit data:", err);
+      alert("An error occurred while fetching data.");
+      setIsData(false);
     }
-    setIsData(true);
+    setIsLoading(false)
     closeDialog(e);
   };
 
@@ -81,6 +98,11 @@ const Subreddit = () => {
       ? setDropdownStyle({ display: "block" })
       : setDropdownStyle({ display: "none" });
   };
+
+    const handleRefresh = ()=>{
+      setDropdownStyle({ display: "none" })
+      fetchReddit()
+    }
 
   return (
     <div className="reddit-card p-2">
@@ -101,7 +123,9 @@ const Subreddit = () => {
                 <i className="fa-solid fa-ellipsis-vertical fs-2"></i>
               </button>
               <div id="dropdown-menu" style={dropdownStyle}>
-                <a className="dropdown-item">Refresh</a>
+                <a className="dropdown-item" onClick={handleRefresh}>
+                  Refresh
+                </a>
                 <a className="dropdown-item">Delete</a>
               </div>
             </div>
@@ -109,10 +133,16 @@ const Subreddit = () => {
         </div>
       )}
       <div className="main pt-5">
+      {isLoading && <div >Loading...</div>}
         {Object.values(redditData).map((i, index) => (
-          <a key={index} href={i.data.url} target="_blank" className="subreddit-item">
-            {i.data.title}
-          </a>
+          <div className="subreddit-item">
+            <div className="row">
+              <span className="col-3 col-md-2">{i.data.score}</span>
+              <a key={index} href={i.data.url} target="_blank" className="col">
+                {i.data.title}
+              </a>
+            </div>
+          </div>
         ))}
       </div>
 
