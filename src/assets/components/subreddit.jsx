@@ -1,111 +1,118 @@
 import React, { useRef, useState, useEffect } from "react";
 
+// Subreddit Component
 const Subreddit = () => {
-  const [inputValue, setInputValue] = useState("");
-  const [redditData, setRedditData] = useState("");
-  const [isData, setIsData] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [dropdownStyle, setDropdownStyle] = useState({ display: "none" });
-  const dialogRef = useRef(null);
-  const dropdownRef = useRef(null);
+  // State variables
+  const [inputValue, setInputValue] = useState(""); // Stores the user's input for subreddit name
+  const [redditData, setRedditData] = useState(""); // Stores fetched data from the Reddit API
+  const [isData, setIsData] = useState(false); // Determines whether subreddit data is displayed
+  const [isLoading, setIsLoading] = useState(false); // Indicates loading state
+  const [dropdownStyle, setDropdownStyle] = useState({ display: "none" }); // Controls dropdown menu visibility
+  const [error, setError] = useState(null); // Stores error messages
 
+
+
+  // Refs for dropdown and dialog elements
+  const dialogRef = useRef(null); // Reference for the dialog element
+  const dropdownRef = useRef(null); // Reference for the dropdown menu element
+
+  // Effect to handle clicks outside the dropdown
   useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside); // Add listener for clicks outside dropdown
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside); // Cleanup listener when component unmounts
     };
   }, []);
 
+  // Handles clicks outside the dropdown to close it
   const handleClickOutside = (event) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-      setDropdownStyle({ display: "none" });
+      setDropdownStyle({ display: "none" }); // Close dropdown menu
     }
   };
 
+  // Opens the dialog for entering subreddit name
   const openDialog = () => {
     if (dialogRef.current) {
-      setInputValue("");
-      dialogRef.current.showModal();
+      setInputValue(""); // Reset input value
+      dialogRef.current.showModal(); // Show the dialog
     }
   };
 
+  // Closes the dialog
   const closeDialog = (e) => {
     e.preventDefault();
     if (dialogRef.current) {
-      dialogRef.current.close();
+      dialogRef.current.close(); // Close the dialog
     }
   };
 
+  // Updates the state when user types in the input field
   const handleInputChange = (e) => {
-    setInputValue(e.target.value);
+    setInputValue(e.target.value); // Store the input value in state
   };
 
-  const fetchRedditData = async (input, isRefreshing = false) => {
-    setIsLoading(true); // Start loading
-    if (!isRefreshing) setIsData(false); // Reset only if not refreshing
-  
-    const authCode =
-      "eyJhbGciOiJSUzI1NiIsImtpZCI6IlNIQTI1NjpzS3dsMnlsV0VtMjVmcXhwTU40cWY4MXE2OWFFdWFyMnpLMUdhVGxjdWNZIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyIiwiZXhwIjoxNzQzMzE4NzAyLjM4MjE3OSwiaWF0IjoxNzQzMjMyMzAyLjM4MjE3OSwianRpIjoiVnJOWlNYa3BMdGRlTVZKMkZ6enNhNWd4VkwtZjlnIiwiY2lkIjoiam5BZ0NuU0JKazhxdzROWEUxZXRaZyIsImxpZCI6InQyXzFtMXc1dWVmNmUiLCJhaWQiOiJ0Ml8xbTF3NXVlZjZlIiwibGNhIjoxNzQzMDY0OTUwNjA1LCJzY3AiOiJlSnlLVnRKU2lnVUVBQURfX3dOekFTYyIsImZsbyI6OX0.p3HQMjbvnm0H6jhUptHsn2Tbm9C_RCr8kJ8Gi7p3Af2RxoESsrXPlLy99EkfJwhLHzdpRHGnkfA-4HZdEK4K63vOLHUemXDo-MF-FfaFsaX7icgOCTbDgXFj2ZKrPFzTfsx1f02_76Jt-HeJQKdH2uXQz2UhYK71okg1abi3hART_s1DCd1cHjzdcX-7eD-xpMUpqsponsc0fmHgidi1rD9tW6M-NsA3IiIxNN_y3JAdPIlcfKHQ4wUUh0Er-9vrzNB8BiZPj5qvlyKwamtTRGOnSaWXgBx856Aa0EYaiEg4Rg-chPLdby7GjbeVaGISJlzy3UM2GN5_BQjdsx5WeQ";
-  
+  // Fetches data from the Reddit API based on input
+  const fetchRedditData = async (subreddit) => {
+    setIsLoading(true); // Start loading indicator
     try {
-      const response = await fetch(`https://oauth.reddit.com/r/${input}/.json`, {
-        method: "GET",
+      // Make a request to your backend instead of the Reddit API directly
+      const response = await fetch(`http://localhost:3001/api/reddit?subreddit=${subreddit}`, {
+        method: 'GET', // Backend handles the HTTP method
         headers: {
-          Authorization: `Bearer ${authCode}`,
-          "User-Agent": "client/1.0 (by hamed-namazi)",
+          'Content-Type': 'application/json', // Ensure JSON response handling
         },
       });
   
       if (!response.ok) {
-        if (response.status === 404) {
-          alert("Subreddit does not exist! Please check the name and try again.");
-        } else if (response.status === 403) {
-          alert("This subreddit is restricted! Access is not allowed.");
-        } else {
-          alert(`An error occurred: HTTP status ${response.status}`);
-        }
-        if (!isRefreshing) setIsData(false); // Reset only if not refreshing
-        return;
+        throw new Error(`Failed to fetch subreddit data: ${response.status}`);
       }
   
-      const data = await response.json();
-      if (data.kind) {
-        setRedditData(data.data.children); // Update data
-        if (!isRefreshing) setIsData(true); // Set `isData` only if not refreshing
+      const redditData = await response.json();
+  
+      // Ensure subreddit data is in the correct format
+      if (redditData && redditData.data && redditData.data.children) {
+        setRedditData(redditData.data.children); // Update state with subreddit posts data
+        setIsData(true); // Indicate data is available
       } else {
-        alert("Wrong subreddit name or restricted subreddit!");
-        if (!isRefreshing) setIsData(false);
+        throw new Error('Invalid subreddit data received');
       }
-    } catch (err) {
-      console.error("Error fetching subreddit data:", err);
-      alert("An error occurred while fetching data.");
-      if (!isRefreshing) setIsData(false);
+    } catch (error) {
+      console.error('Error fetching subreddit data:', error.message);
+      alert(error.message); // Display error to the user
+      setRedditData(""); // Clear previous data on error
+      setIsData(false); // Reset data indicator
+    } finally {
+      setIsLoading(false); // Stop loading indicator
     }
-  
-    setIsLoading(false); // Stop loading
   };
   
+  
 
+  // Handles the search operation from the dialog
   const fetchReddit = async (e) => {
     e.preventDefault();
-    closeDialog(e);
-    await fetchRedditData(inputValue);
+    closeDialog(e); // Close dialog
+    await fetchRedditData(inputValue); // Fetch data for the entered input
   };
 
+  // Refreshes the subreddit data
   const handleRefresh = async () => {
-    setIsLoading(true);
-    setRedditData(""); // Clear data
-    setDropdownStyle({ display: "none" })
-    await fetchRedditData(inputValue);
+    setIsLoading(true); // Start loading
+    setRedditData(""); // Clear existing data
+    setDropdownStyle({ display: "none" }); // Close dropdown menu
+    await fetchRedditData(inputValue, true); // Fetch data for refresh
   };
 
+  // Deletes current subreddit data and clears input
   const handleDelete = () => {
-    setInputValue(""); // Clear input
-    setRedditData(""); // Clear data
-    setIsData(false); // Hide data section
-    setDropdownStyle({ display: "none" }); // Hide dropdown
+    setInputValue(""); // Reset input field
+    setRedditData(""); // Clear subreddit data
+    setIsData(false); // Hide the header
+    setDropdownStyle({ display: "none" }); // Close dropdown menu
   };
 
+  // Toggles the dropdown menu visibility
   const handleDropdown = () => {
     setDropdownStyle((prevStyle) => ({
       display: prevStyle.display === "none" ? "block" : "none",
@@ -114,10 +121,13 @@ const Subreddit = () => {
 
   return (
     <div className="reddit-card p-2">
-      {/* Header */}
+      {/* Header section */}
       {!isData && (
         <div className="header p-2">
-          <i onClick={openDialog} className="fa-solid fa-plus tomato-rounded"></i>
+          <i
+            onClick={openDialog}
+            className="fa-solid fa-plus tomato-rounded"
+          ></i>
         </div>
       )}
       {isData && (
@@ -141,11 +151,11 @@ const Subreddit = () => {
         </div>
       )}
 
-      {/* Main */}
+      {/* Main content section */}
       <div className="main pt-5">
-        {isLoading && <div>Loading...</div>}
+        {isLoading && <div>Loading...</div>} {/* Loading indicator */}
         {redditData &&
-          Object.values(redditData).map((item, index) => (
+          redditData.map((item, index) => (
             <div
               className="subreddit-item"
               key={index}
@@ -153,7 +163,7 @@ const Subreddit = () => {
             >
               <div className="row">
                 <span className="col-3 col-md-2">{item.data.score}</span>
-                <a href={item.data.url} target="_blank" className="col">
+                <a href={item.data.url} target="_blank" rel="noreferrer" className="col">
                   {item.data.title}
                 </a>
               </div>
@@ -161,7 +171,7 @@ const Subreddit = () => {
           ))}
       </div>
 
-      {/* Dialog section */}
+      {/* Dialog section for entering subreddit name */}
       <dialog ref={dialogRef}>
         <form onSubmit={fetchReddit}>
           <label htmlFor="user-input" className="form-label">
