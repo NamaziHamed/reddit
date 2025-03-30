@@ -67,3 +67,7 @@ Express: For handling HTTP requests.
 Axios: For making HTTP requests to Reddit's API.
 
 CORS: To manage cross-origin requests.
+
+#important noe:
+
+the client_id and client_secret have been replaced with dummy text to prevent sercurity issues, replace with your own key.
